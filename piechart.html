@@ -1,0 +1,141 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<style>
+	canvas {
+		background: lightgray;
+		border: 1px solid gray;
+	}
+	#tooltip {
+		position: absolute;
+		border: 1px solid gray;
+		padding-left: 10px;
+		padding-right: 10px;
+		display: none;
+		font-size: 20px;
+	}
+</style>
+<div>
+	<div>PHP:<input type="text" name="PHP" value="20"></div>
+	<div>Js:<input type="text" name="Js" value="40"></div>
+	<div>C:<input type="text" name="C" value="30"></div>
+	<div>C++:<input type="text" name="C++" value="50"></div>
+	<div>Java:<input type="text" name="Java" value="60"></div>
+	<div><button onclick="chart()">chart</button></div>
+</div>
+<hr>
+<canvas id="c" width="400px" height="400px"></canvas>
+<div id="tooltip"></div>
+<script>
+	var canvas=document.querySelector("#c");
+	var ctx=canvas.getContext("2d");
+	const WIDTH = canvas.width;
+	const HEIGHT = canvas.height;
+	var x=WIDTH/2
+	var y=HEIGHT/2
+	var r=150;
+	var FONT_SIZE = 20;
+	let startRadian=0;
+	let endRadian=2*Math.PI;
+	// ctx.arc(x, y, r, startRadian, endRadian);//画圆
+	// ctx.fillStyle="grey";//给圆设置填充颜色
+	// ctx.fill();//给圆填充颜色
+
+	//获取input标签中type属性为"text"的input元素的集合
+	let course=document.querySelectorAll("input[type='text']");
+	var nums=0;
+	let startRadians = 3 / 2 * Math.PI;
+	var colors=["red","lightgreen","pink","lightyellow","lightblue"];//定义一个颜色数组，从中获取颜色
+	
+	// function rgb(){//rgb颜色随机
+	// 		var r = Math.floor(Math.random()*256);
+	// 		var g = Math.floor(Math.random()*256);
+	// 		var b = Math.floor(Math.random()*256);
+	// 		var rgb = '('+r+','+g+','+b+')';
+	// 		return rgb;
+	// };
+	let result=false;
+	let positions=[];// 文字显示区域的中心点（存储起来为了后面判断鼠标靠近哪一个）
+	
+	// 鼠标移动事件
+	canvas.onmousemove=(function(e) {
+		console.log(1);
+		if (result) {
+			let x=e.offsetX;
+			let y=e.offsetY;
+			let position = getPosition(x,y);
+			console.log(position);
+			with(document.querySelector("#tooltip")){
+				if (position==-1) {//position=getPosition()返回的post值
+					style.display="none";
+				}else{
+					style.display="block";
+					style.top=e.clientY + 10;
+					style.left=e.clientX + 10;
+					textContent = course[position].value;
+				}
+			}
+		}
+	});
+
+	// 根据鼠标位置判断靠近哪一个文字区域
+	let getPosition = (x,y)=>{
+		let post=-1;
+		positions.forEach(({x1,y1},index)=>{
+			let textWidth=ctx.measureText(course[index].getAttribute("name")).width;
+			if (x > x1-textWidth/2-10 && x < x1+textWidth/2+10 && y>y1-FONT_SIZE/2-10&&y<y1+FONT_SIZE/2+10) {
+				post=index;
+			};
+		});
+		return post;
+	};
+
+
+
+	function chart(){
+		result = true;
+		ctx.clearRect(0, 0, WIDTH, HEIGHT);//清空画布
+		var all=0;
+		positions=[];
+
+		for (var i = 0; i < course.length; i++) {//循环遍历出输入的值，求总和
+		var score=course[i].value*1;
+		all=score+all;
+		}
+
+		course.forEach( function(element, index) {
+			console.log(element.value);
+			num=element.value;
+			var endRadian= startRadians+num/all*2*Math.PI;
+			//画扇形
+			ctx.beginPath();
+			ctx.moveTo(x, y);
+			ctx.arc(x, y, r, startRadians, endRadian);
+			ctx.fillStyle=colors[index];//给扇形设置填充颜色，从数组中获取
+			// ctx.fillStyle="rgb" + rgb();//给扇形设置填充颜色
+			ctx.fill();//给圆填充颜色
+			ctx.closePath();
+			ctx.stroke();
+			var endRadian1= startRadians+num/all*Math.PI;//中间位置的端点
+			let x1 = x + r * Math.cos(endRadian1)/2;
+			let y1 = y + r * Math.sin(endRadian1)/2;
+			startRadians=endRadian;
+			ctx.beginPath();
+			ctx.font = "bold italic 15px";
+			ctx.fillStyle = "black";
+			ctx.fillText(element.getAttribute("name"), x1, y1);
+			positions.push({x1,y1}); //将中点坐标存入数组中
+			console.log(positions);
+
+			// num=element.value*1;
+			// nums += num;
+			// var endRadian= 3 / 2 * Math.PI+nums/all*2*Math.PI;
+			// ctx.beginPath();
+			// ctx.moveTo(x, y);
+			// ctx.arc(x, y, r, startRadians, endRadian);
+			// ctx.closePath();
+			// ctx.stroke();
+			// startRadians=endRadian;
+		});	
+
+	};
+
+</script>
